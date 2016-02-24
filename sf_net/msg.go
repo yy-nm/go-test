@@ -41,7 +41,7 @@ type Packet interface {
 
 type Msg interface {
 	Packet
-	Get_id() conn_id
+	Get_id() Conn_Id
 }
 
 type packet struct {
@@ -52,10 +52,10 @@ type packet struct {
 
 type msg struct {
 	packet
-	id conn_id
+	id Conn_Id
 }
 
-func New_msg(t MsgType, body []byte, tail []byte, id conn_id) Msg {
+func New_msg(t MsgType, body []byte, tail []byte, id Conn_Id) Msg {
 	m := new(msg)
 	m.t = t
 	m.body = body
@@ -167,6 +167,6 @@ func (p *packet) Get_tail() []byte {
 	return p.tail
 }
 
-func (m *msg) Get_id() conn_id {
+func (m *msg) Get_id() Conn_Id {
 	return m.id
 }

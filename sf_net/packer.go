@@ -8,21 +8,24 @@ import (
 )
 
 type Packer interface {
-	pack(buf []byte) (Packet, error)
-	unpack(Packet) []byte
-	clear()
+	Pack(buf []byte) (Packet, error)
+	Unpack(Packet) []byte
+	Clear()
 }
 
 type PackerType string
 
 const (
 	PACKER_TYPE_DEFAULT PackerType = "default"
+	PACKER_TYPE_PACKET  PackerType = "packet"
 )
 
 func New_packer(t PackerType) Packer {
 	switch t {
+	case PACKER_TYPE_PACKET:
+		return new(packet_packer)
 	default:
-		return new(packer)
+		return new(default_packer)
 	}
 
 	return nil
@@ -33,10 +36,44 @@ func Get_packer_type(conf sf_config.Config) PackerType {
 	if e != nil {
 		panic("stream type must be string")
 	}
-	switch t {
+	switch PackerType(t) {
+	case PACKER_TYPE_PACKET:
+		return PACKER_TYPE_PACKET
 	default:
 		return PACKER_TYPE_DEFAULT
 	}
+}
+
+type default_packer struct {
+}
+
+func (p *default_packer) Pack(buf []byte) (pkt Packet, err error) {
+	if p == nil || buf == nil {
+		err = sf_misc.ErrNilPointer
+		return
+	}
+
+	d := new(packet)
+	d.body = make([]byte, len(buf))
+	copy(d.body, buf)
+
+	pkt = d
+	return
+}
+
+func (p *default_packer) Unpack(d Packet) []byte {
+	if d == nil || p == nil || d.Get_body() == nil {
+		return nil
+	}
+	b := d.Get_body()
+
+	buf := make([]byte, len(b))
+	copy(buf, b)
+
+	return buf
+}
+
+func (p *default_packer) Clear() {
 }
 
 const (
@@ -50,7 +87,7 @@ const (
 	INDEX_MSG_TAIL int = INDEX_MSG_BODY + LEN_MSG_BODY
 )
 
-type packer struct {
+type packet_packer struct {
 	buf []byte
 }
 
@@ -67,7 +104,7 @@ func Append(src []byte, app []byte) (result []byte) {
 	return result[:len(result)+len(app)]
 }
 
-func (p *packer) pack(buf []byte) (pkt Packet, err error) {
+func (p *packet_packer) Pack(buf []byte) (pkt Packet, err error) {
 	if p == nil || buf == nil {
 		err = sf_misc.ErrNilPointer
 		return
@@ -109,7 +146,7 @@ func (p *packer) pack(buf []byte) (pkt Packet, err error) {
 	return
 }
 
-func (p *packer) unpack(datap Packet) []byte {
+func (p *packet_packer) Unpack(datap Packet) []byte {
 	if p == nil || datap == nil {
 		return nil
 	}
@@ -147,7 +184,7 @@ func (p *packer) unpack(datap Packet) []byte {
 	return buf
 }
 
-func (p *packer) clear() {
+func (p *packet_packer) Clear() {
 	if p.buf != nil {
 		p.buf = nil
 	}

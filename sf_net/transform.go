@@ -16,16 +16,16 @@ func get_new_id() uint32 {
 	return atomic.AddUint32(&g_conn_id, 1)
 }
 
-func gen_uni_conn_id() conn_id {
+func gen_uni_conn_id() Conn_Id {
 	var i uint32
 	for {
 		i = get_new_id()
-		if conn_id_invalid != conn_id(i) {
+		if conn_id_invalid != Conn_Id(i) {
 			break
 		}
 	}
 
-	return conn_id(i)
+	return Conn_Id(i)
 }
 
 type io_type struct {
@@ -47,35 +47,35 @@ type io_client struct {
 	p         Packer
 	s         Stream
 	st        StreamType
-	id        conn_id
+	id        Conn_Id
 	w_channel chan []byte
 	is_recv   bool
 }
 
 type Network interface {
-	send_msg(m Msg)
-	close_conn(m Msg)
+	Send_msg(m Msg)
+	Close_conn(m Msg)
 
-	register_callback(callback NetworkCallback) (old NetworkCallback)
-	start() (err error)
-	stop() (err error)
+	Register_callback(callback NetworkCallback) (old NetworkCallback)
+	Start() (err error)
+	Stop() (err error)
 }
 
 type NetworkCallback interface {
-	recv_msg(m Msg)
-	conn_broken(conn_id conn_id)
+	Recv_msg(m Msg)
+	Conn_broken(conn_id Conn_Id)
 }
 
-type conn_id int32
+type Conn_Id int32
 
-var conn_id_invalid conn_id = 0
+var conn_id_invalid Conn_Id = 0
 
 // TODO network is too heavy too maintain, reduce
 type network struct {
 	svrs      list.List
 	clients   map[ServiceType]map[ServiceId]*io_client
 	conn_lock sync.Locker
-	conns     map[conn_id]*io_client
+	conns     map[Conn_Id]*io_client
 
 	callback NetworkCallback
 }
@@ -85,7 +85,7 @@ func conn_close(c *io_client) {
 		c.s.Close()
 	}
 	if c.p != nil {
-		c.p.clear()
+		c.p.Clear()
 	}
 	if c.w_channel != nil {
 		close(c.w_channel)
@@ -96,10 +96,11 @@ func (n *network) handle_msg(m Msg) {
 	if n.callback == nil {
 		return
 	}
-	go n.callback.recv_msg(m)
+	go n.callback.Recv_msg(m)
 }
 
 func (n *network) handle_conn_close(c *io_client) {
+	sf_misc.Log("network, conn close: ", c.id)
 	conn_close(c)
 	n.conn_lock.Lock()
 	delete(n.conns, c.id)
@@ -109,7 +110,7 @@ func (n *network) handle_conn_close(c *io_client) {
 		return
 	}
 
-	go n.callback.conn_broken(c.id)
+	go n.callback.Conn_broken(c.id)
 }
 
 func (n *network) recv_data(c *io_client) {
@@ -130,8 +131,8 @@ func (n *network) recv_data(c *io_client) {
 			buf = buf[:cap(buf)]
 			continue
 		}
-		buf = buf[:l]
-		p, e = c.p.pack(buf)
+
+		p, e = c.p.Pack(buf[:l])
 		if e != nil {
 			c.s.Close()
 			break
@@ -142,7 +143,7 @@ func (n *network) recv_data(c *io_client) {
 	}
 
 	// when w_channel is close means client not longer reconn
-	if !c.is_recv || c.w_channel != nil {
+	if !c.is_recv && c.w_channel != nil {
 		n.client_conn(c)
 	} else if c.is_recv {
 		n.handle_conn_close(c)
@@ -155,6 +156,7 @@ func (n *network) send_data(c *io_client) {
 	for data := range c.w_channel {
 		l = 0
 		e = nil
+
 		for len(data) > 0 {
 			l, e = c.s.Write(data)
 			if e != nil {
@@ -169,6 +171,7 @@ func (n *network) send_data(c *io_client) {
 }
 
 func (n *network) build_new_conn(c *io_client) {
+	sf_misc.Log("network: new conn: ", c.id)
 	n.conn_lock.Lock()
 	n.conns[c.id] = c
 	n.conn_lock.Unlock()
@@ -236,7 +239,7 @@ func (n *network) client_conn(c *io_client) {
 }
 
 // not thread-safe
-func (n *network) start() (err error) {
+func (n *network) Start() (err error) {
 	if n == nil {
 		err = sf_misc.ErrNilPointer
 		return
@@ -267,7 +270,7 @@ func (n *network) start() (err error) {
 }
 
 // not thread-safe
-func (n *network) stop() (err error) {
+func (n *network) Stop() (err error) {
 	for _, m := range n.clients {
 		if m == nil {
 			continue
@@ -279,7 +282,7 @@ func (n *network) stop() (err error) {
 			// avoid client invoke reconn
 			close(c.w_channel)
 			c.w_channel = nil
-			c.p.clear()
+			c.p.Clear()
 			c.s.Close()
 			n.conn_lock.Lock()
 			delete(n.conns, c.id)
@@ -307,7 +310,7 @@ func (n *network) stop() (err error) {
 	return
 }
 
-func (n *network) register_callback(callback NetworkCallback) (old NetworkCallback) {
+func (n *network) Register_callback(callback NetworkCallback) (old NetworkCallback) {
 	if n == nil {
 		return
 	}
@@ -328,7 +331,7 @@ func (n *network) find_conn_by_msg(m Msg) *io_client {
 	}
 }
 
-func (n *network) close_conn(m Msg) {
+func (n *network) Close_conn(m Msg) {
 	if n == nil || m == nil {
 		return
 	}
@@ -336,7 +339,7 @@ func (n *network) close_conn(m Msg) {
 	conn_close(c)
 }
 
-func (n *network) send_msg(m Msg) {
+func (n *network) Send_msg(m Msg) {
 	if n == nil || m == nil {
 		return
 	}
@@ -344,7 +347,10 @@ func (n *network) send_msg(m Msg) {
 	if c.w_channel == nil {
 		return
 	}
-	c.w_channel <- c.p.unpack(m)
+	go func() {
+		c.w_channel <- c.p.Unpack(m)
+		recover() // in case w_channel close by other goroutine
+	}()
 }
 
 // read config about "net" : {svrs, clients}
@@ -387,7 +393,7 @@ func New_default_network(config sf_config.Config) (n Network, err error) {
 	net := new(network)
 	net.callback = nil
 	//	net.ch_close = make(chan bool)
-	net.conns = make(map[conn_id]*io_client)
+	net.conns = make(map[Conn_Id]*io_client)
 	net.svrs = list.List{}
 	net.svrs.Init()
 	net.clients = make(map[ServiceType]map[ServiceId]*io_client)

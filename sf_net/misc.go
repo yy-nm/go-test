@@ -1,6 +1,9 @@
 package sf_net
 
-import "test/sf_config"
+import (
+	"fmt"
+	"test/sf_config"
+)
 
 type ServiceType string
 type ServiceId int
@@ -8,6 +11,7 @@ type ServiceId int
 func Get_service_type(conf sf_config.Config) ServiceType {
 	t, e := conf.String()
 	if e != nil {
+		fmt.Println(conf.Type())
 		panic("service type must be string")
 	}
 	return ServiceType(t)

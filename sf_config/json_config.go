@@ -89,7 +89,7 @@ func (c *json_Config) Get(key string) (config Config, err error) {
 		return
 	}
 
-	config = &json_Config{content: v, is_read: true}
+	config = &json_Config{content: v[key], is_read: true}
 	return
 }
 

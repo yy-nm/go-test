@@ -2,7 +2,6 @@ package sf_net
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"test/sf_config"
 	"test/sf_misc"
@@ -18,10 +17,8 @@ const (
 func New_Stream(t StreamType, src io.ReadWriteCloser) Stream {
 	switch t {
 	case STREAM_TYPE_PACKET:
-		fmt.Println("packet")
 		return &packet_stream{stream{src}, nil}
 	default:
-		fmt.Println("default")
 		return &stream{conn: src}
 	}
 
@@ -63,7 +60,8 @@ func (s *stream) Read(buf []byte) (n int, err error) {
 		return 0, sf_misc.ErrNilPointer
 	}
 
-	return s.conn.Read(buf)
+	n, err = s.conn.Read(buf)
+	return
 }
 
 func (s *stream) Write(buf []byte) (n int, err error) {
@@ -71,7 +69,8 @@ func (s *stream) Write(buf []byte) (n int, err error) {
 		return 0, sf_misc.ErrNilPointer
 	}
 
-	return s.conn.Write(buf)
+	n, err = s.conn.Write(buf)
+	return
 }
 
 const (

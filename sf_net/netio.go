@@ -55,6 +55,8 @@ func (c *conn) Write(buf []byte) (n int, err error) {
 			return
 		}
 		n += l
+		buf = buf[l:]
+		l = 0
 	}
 
 	return
