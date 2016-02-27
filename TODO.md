@@ -13,3 +13,5 @@
 
 - 2.22 ~ 2.26
   + 2.24: 初步实现网络部分, 当时分层和模块有几个部分分隔不明确/不清晰, 主要的隔离依靠配置接口, 当前的配置实现是以解析 json 数据
+  + 确定新的结构之后, 可以看一下 [Effective Go](https://golang.org/doc/effective_go.html) 充分了解 go
+  + 完成 io, stream, connMgr 部分编写

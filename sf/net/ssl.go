@@ -1,4 +1,4 @@
-package sf_net
+package net
 
 type Ssl interface {
 	Crypto([]byte) []byte

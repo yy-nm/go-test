@@ -27,7 +27,7 @@ func main() {
 	"net" : {
 		"type": "default"
 		, "svrs": [{ "type": "gate", "id": 1, "sock_type": "tcp"
-		, "sock_addr": "0.0.0.0:9090", "packer": "default", "stream": "default" }]
+		, "sock_addr": "0.0.0.0:9090", "stream": "default" }]
 
 	}
 }

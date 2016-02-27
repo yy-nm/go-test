@@ -1,4 +1,4 @@
-package sf_config
+package config
 
 type Config_Value_Type int
 

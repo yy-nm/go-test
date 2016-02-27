@@ -1,4 +1,4 @@
-package sf_net
+package net
 
 import "container/list"
 

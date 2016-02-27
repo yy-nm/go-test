@@ -1,7 +1,5 @@
-// author: mard
-
 // used to crypto
-package sf_crypto
+package crypto
 
 import (
 	"math/big"

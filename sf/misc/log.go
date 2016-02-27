@@ -1,4 +1,4 @@
-package sf_misc
+package misc
 
 import "fmt"
 

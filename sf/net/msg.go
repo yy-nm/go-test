@@ -1,4 +1,6 @@
-package sf_net
+package net
+
+import "encoding/binary"
 
 type MsgType uint32
 
@@ -34,14 +36,14 @@ const (
 )
 
 type Packet interface {
-	Get_type() MsgType
-	Get_body() []byte
-	Get_tail() []byte
+	GetType() MsgType
+	GetBody() []byte
+	GetTail() []byte
 }
 
 type Msg interface {
 	Packet
-	Get_id() Conn_Id
+	GetId() ConnId
 }
 
 type packet struct {
@@ -52,46 +54,67 @@ type packet struct {
 
 type msg struct {
 	packet
-	id Conn_Id
+	id ConnId
 }
 
-func New_msg(t MsgType, body []byte, tail []byte, id Conn_Id) Msg {
+func NewMsg(t MsgType, body []byte, tail []byte, id ConnId) Msg {
 	m := new(msg)
 	m.t = t
-	m.body = body
-	m.tail = tail
+	if body != nil {
+		m.body = make([]byte, len(body))
+		copy(m.body, body)
+	}
+	if tail != nil {
+		m.tail = make([]byte, len(tail))
+		copy(m.tail, tail)
+	}
 	m.id = id
 	return m
 }
 
-func (mt MsgType) Is_flag_request() bool {
+func NewPacket(t MsgType, body []byte, tail []byte) Packet {
+	p := new(packet)
+	p.t = t
+	if body != nil {
+		p.body = make([]byte, len(body))
+		copy(p.body, body)
+	}
+	if tail != nil {
+		p.tail = make([]byte, len(tail))
+		copy(p.tail, tail)
+	}
+
+	return p
+}
+
+func (mt MsgType) IsRequest() bool {
 	return mt&MSG_FLAG_REQ != MSG_FLAG_NULL
 }
 
-func (mt MsgType) Is_flag_response() bool {
+func (mt MsgType) IsResponse() bool {
 	return mt&MSG_FLAG_RES != MSG_FLAG_NULL
 }
 
-func (mt MsgType) Is_flag_cluster() bool {
+func (mt MsgType) IsCluster() bool {
 	return mt&MSG_FLAG_MULTICAST != MSG_FLAG_NULL || mt&MSG_FLAG_UNICAST != MSG_FLAG_NULL
 }
 
-func (mt MsgType) Get_flag_opt() int {
+func (mt MsgType) GetOpt() int {
 	opt := mt & MSG_FLAG_OPT
 	o := int(opt)
 	o >>= MSG_SHIFT_OPT
 	return o
 }
 
-func (mt MsgType) Get_flag_type() MsgType {
+func (mt MsgType) GetType() MsgType {
 	return mt & MSG_FLAG_TYPE
 }
 
-func (mt MsgType) Get_flag_proto() MsgType {
-	return mt & MSG_FLAG_PROTO
+func (mt MsgType) GetProto() int {
+	return int(mt & MSG_FLAG_PROTO)
 }
 
-func (mt MsgType) Set_flag_request(set_or_cancel bool) MsgType {
+func (mt MsgType) SetRequestFlag(set_or_cancel bool) MsgType {
 	if set_or_cancel {
 		mt |= MSG_FLAG_REQ
 	} else {
@@ -101,7 +124,7 @@ func (mt MsgType) Set_flag_request(set_or_cancel bool) MsgType {
 	return mt
 }
 
-func (mt MsgType) Set_flag_response(set_or_cancel bool) MsgType {
+func (mt MsgType) SetResponseFlag(set_or_cancel bool) MsgType {
 	if set_or_cancel {
 		mt |= MSG_FLAG_RES
 	} else {
@@ -111,7 +134,7 @@ func (mt MsgType) Set_flag_response(set_or_cancel bool) MsgType {
 	return mt
 }
 
-func (mt MsgType) Set_flag_unicast(set_or_cancel bool) MsgType {
+func (mt MsgType) SetUnicastFlag(set_or_cancel bool) MsgType {
 	if set_or_cancel {
 		mt |= MSG_FLAG_UNICAST
 	} else {
@@ -121,7 +144,7 @@ func (mt MsgType) Set_flag_unicast(set_or_cancel bool) MsgType {
 	return mt
 }
 
-func (mt MsgType) Set_flag_multicast(set_or_cancel bool) MsgType {
+func (mt MsgType) SetMulticastFlag(set_or_cancel bool) MsgType {
 	if set_or_cancel {
 		mt |= MSG_FLAG_MULTICAST
 	} else {
@@ -131,7 +154,7 @@ func (mt MsgType) Set_flag_multicast(set_or_cancel bool) MsgType {
 	return mt
 }
 
-func (mt MsgType) Set_flag_opt(opt int) MsgType {
+func (mt MsgType) SetOpt(opt int) MsgType {
 	o := MsgType(opt)
 	o <<= MSG_SHIFT_OPT
 	o &= MSG_FLAG_OPT
@@ -140,14 +163,14 @@ func (mt MsgType) Set_flag_opt(opt int) MsgType {
 	return mt
 }
 
-func (mt MsgType) Set_flag_type(t MsgType) MsgType {
+func (mt MsgType) SetType(t MsgType) MsgType {
 	t &= MSG_FLAG_TYPE
 	mt |= t
 
 	return mt
 }
 
-func (mt MsgType) Set_flag_proto(proto int) MsgType {
+func (mt MsgType) SetProto(proto int) MsgType {
 	p := MsgType(proto)
 	p &= MSG_FLAG_PROTO
 	mt |= p
@@ -155,18 +178,24 @@ func (mt MsgType) Set_flag_proto(proto int) MsgType {
 	return mt
 }
 
-func (p *packet) Get_type() MsgType {
+func (mt MsgType) Convert2Bytes(bo binary.ByteOrder) (buf []byte) {
+	buf = make([]byte, 4)
+	bo.PutUint32(buf, uint32(mt))
+	return
+}
+
+func (p *packet) GetType() MsgType {
 	return p.t
 }
 
-func (p *packet) Get_body() []byte {
+func (p *packet) GetBody() []byte {
 	return p.body
 }
 
-func (p *packet) Get_tail() []byte {
+func (p *packet) GetTail() []byte {
 	return p.tail
 }
 
-func (m *msg) Get_id() Conn_Id {
+func (m *msg) GetId() ConnId {
 	return m.id
 }

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"test/sf_net"
+	"test/sf/net"
 	"time"
 )
 
@@ -62,7 +62,7 @@ func main() {
 	//	ch <- true
 
 	time.Sleep(time.Second * 2)
-	sf_net.New_Stream(sf_net.STREAM_TYPE_DEFAULT, nil)
+	net.NewPacket(net.MsgType(0), nil, nil)
 
 	x = []byte{1, 2, 3, 4}
 	copy(y[:2], x)

@@ -1,8 +1,8 @@
-package sf_config
+package config
 
 import (
 	"encoding/json"
-	"test/sf_misc"
+	"test/sf/misc"
 )
 
 type json_Config struct {
@@ -12,7 +12,7 @@ type json_Config struct {
 
 func (c *json_Config) Read(data []byte) (err error) {
 	if c == nil {
-		err = sf_misc.ErrNilPointer
+		err = misc.ErrNilPointer
 		return
 	}
 
@@ -27,10 +27,10 @@ func (c *json_Config) Read(data []byte) (err error) {
 
 func (c *json_Config) Type() (cvt Config_Value_Type, err error) {
 	if c == nil {
-		err = sf_misc.ErrNilPointer
+		err = misc.ErrNilPointer
 		return
 	} else if !c.is_read {
-		err = sf_misc.ErrConfigNotInit
+		err = misc.ErrConfigNotInit
 		return
 	}
 
@@ -40,22 +40,22 @@ func (c *json_Config) Type() (cvt Config_Value_Type, err error) {
 
 func (c *json_Config) Arr_type() (cvt Config_Value_Type, err error) {
 	if c == nil {
-		err = sf_misc.ErrNilPointer
+		err = misc.ErrNilPointer
 		return
 	} else if !c.is_read {
-		err = sf_misc.ErrConfigNotInit
+		err = misc.ErrConfigNotInit
 		return
 	}
 
 	vt := get_type(c.content)
 	if vt != CONF_VAL_TYPE_ARR {
-		err = sf_misc.ErrConfigNotArr
+		err = misc.ErrConfigNotArr
 		return
 	}
 
 	av, ok := c.content.([]interface{})
 	if !ok {
-		err = sf_misc.ErrConfigConvert
+		err = misc.ErrConfigConvert
 		return
 	}
 
@@ -70,22 +70,22 @@ func (c *json_Config) Arr_type() (cvt Config_Value_Type, err error) {
 
 func (c *json_Config) Get(key string) (config Config, err error) {
 	if c == nil {
-		err = sf_misc.ErrNilPointer
+		err = misc.ErrNilPointer
 		return
 	} else if !c.is_read {
-		err = sf_misc.ErrConfigNotInit
+		err = misc.ErrConfigNotInit
 		return
 	}
 
 	vt := get_type(c.content)
 	if vt != CONF_VAL_TYPE_OBJ {
-		err = sf_misc.ErrConfigTypeNotMatch
+		err = misc.ErrConfigTypeNotMatch
 		return
 	}
 
 	v, ok := c.content.(map[string]interface{})
 	if !ok {
-		err = sf_misc.ErrConfigConvert
+		err = misc.ErrConfigConvert
 		return
 	}
 
@@ -95,16 +95,16 @@ func (c *json_Config) Get(key string) (config Config, err error) {
 
 func (c *json_Config) Bool() (v bool, err error) {
 	if c == nil {
-		err = sf_misc.ErrNilPointer
+		err = misc.ErrNilPointer
 		return
 	} else if !c.is_read {
-		err = sf_misc.ErrConfigNotInit
+		err = misc.ErrConfigNotInit
 		return
 	}
 
 	vt := get_type(c.content)
 	if vt != CONF_VAL_TYPE_BOOL {
-		err = sf_misc.ErrConfigTypeNotMatch
+		err = misc.ErrConfigTypeNotMatch
 		return
 	}
 
@@ -114,16 +114,16 @@ func (c *json_Config) Bool() (v bool, err error) {
 
 func (c *json_Config) Float() (v float64, err error) {
 	if c == nil {
-		err = sf_misc.ErrNilPointer
+		err = misc.ErrNilPointer
 		return
 	} else if !c.is_read {
-		err = sf_misc.ErrConfigNotInit
+		err = misc.ErrConfigNotInit
 		return
 	}
 
 	vt := get_type(c.content)
 	if vt != CONF_VAL_TYPE_NUM {
-		err = sf_misc.ErrConfigTypeNotMatch
+		err = misc.ErrConfigTypeNotMatch
 		return
 	}
 
@@ -133,16 +133,16 @@ func (c *json_Config) Float() (v float64, err error) {
 
 func (c *json_Config) String() (v string, err error) {
 	if c == nil {
-		err = sf_misc.ErrNilPointer
+		err = misc.ErrNilPointer
 		return
 	} else if !c.is_read {
-		err = sf_misc.ErrConfigNotInit
+		err = misc.ErrConfigNotInit
 		return
 	}
 
 	vt := get_type(c.content)
 	if vt != CONF_VAL_TYPE_STR {
-		err = sf_misc.ErrConfigTypeNotMatch
+		err = misc.ErrConfigTypeNotMatch
 		return
 	}
 
