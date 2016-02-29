@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 	"test/sf/config"
 	"test/sf/net"
 	"time"
@@ -50,7 +51,12 @@ func main() {
 	conns.Register(s)
 	conns.Start()
 
+	var ms runtime.MemStats
 	for {
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * 5)
+		runtime.ReadMemStats(&ms)
+
+		fmt.Printf("runtime: alloc mem: %d, free mem: %d, sys mem: %d\n", ms.Alloc, ms.Frees, ms.Sys)
+		fmt.Printf("heap: alloc: %d, sys: %d, in-use: %d, no-use: %d\n", ms.HeapAlloc, ms.HeapSys, ms.HeapInuse, ms.HeapIdle)
 	}
 }

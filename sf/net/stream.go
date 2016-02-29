@@ -85,7 +85,8 @@ func (s *stream) Write(p Packet) (err error) {
 		return
 	}
 
-	buf := p.GetBody()
+	buf := make([]byte, len(p.GetBody()))
+	copy(buf, p.GetBody())
 	if p == nil || buf == nil {
 		return
 	}

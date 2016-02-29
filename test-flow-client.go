@@ -84,8 +84,8 @@ func unitTest(port int, ip, t string, tm int) {
 
 	time.Sleep(time.Second * time.Duration(tm))
 
-	fmt.Printf("send speed: %d\n", dz.Count/tm)
-	fmt.Printf("recv speed: %d\n", dn.Count/tm)
+	fmt.Printf("send speed: %d, total: %d\n", dz.Count/tm, dz.Count)
+	fmt.Printf("recv speed: %d, total: %d\n", dn.Count/tm, dn.Count)
 
 	s.Close()
 }
