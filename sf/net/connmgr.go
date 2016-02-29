@@ -12,7 +12,7 @@ import (
 type ConnMgrCallback interface {
 	ConnRecv(id ConnId, m Msg)
 	ConnBroken(id ConnId)
-	ConnBuild(id ConnId, addr *netAddr)
+	ConnBuild(id ConnId, addr *NetAddr)
 }
 
 type ConnMgr interface {
@@ -295,6 +295,7 @@ func (cm *connManager) recvMsg(c *conn) {
 			break
 		}
 
+		//misc.Log("read from client: ", string(p.GetBody()), ", id: ", c.clt.GetId())
 		if p != nil && cm.callback != nil {
 			go cm.callback.ConnRecv(c.clt.GetId(), NewMsg(p.GetType(), p.GetBody(), p.GetTail(), c.clt.GetId()))
 		}
@@ -333,7 +334,7 @@ const (
 	CONF_NETWORK_KEY_STREAM    = "stream"
 )
 
-func newConnMgr(conf config.Config) ConnMgr {
+func NewConnMgr(conf config.Config) ConnMgr {
 	t, _ := conf.Get(CONF_CONNMGR_TYPE)
 
 	switch v, _ := t.String(); v {

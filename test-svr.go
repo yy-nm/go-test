@@ -2,23 +2,27 @@ package main
 
 import (
 	"fmt"
-	"test/sf_config"
-	"test/sf_net"
+	"test/sf/config"
+	"test/sf/net"
 	"time"
 )
 
 type svr struct {
-	net sf_net.Network
+	mgr net.ConnMgr
 }
 
-func (s *svr) Recv_msg(m sf_net.Msg) {
-	fmt.Print("recv: ")
-	fmt.Println(string(m.Get_body()))
-	s.net.Send_msg(m)
+func (s *svr) ConnRecv(id net.ConnId, m net.Msg) {
+	//fmt.Print("recv: ")
+	//fmt.Println(string(m.GetBody()))
+	s.mgr.SendMsg(id, m)
 }
 
-func (s *svr) Conn_broken(conn_id sf_net.Conn_Id) {
-	fmt.Println("conn close: ", conn_id)
+func (s *svr) ConnBroken(id net.ConnId) {
+	fmt.Println("conn close: ", id)
+}
+
+func (s *svr) ConnBuild(id net.ConnId, addr *net.NetAddr) {
+	fmt.Println("new conn coming: id: ", id, ", addr: ", addr)
 }
 
 func main() {
@@ -26,27 +30,25 @@ func main() {
 {
 	"net" : {
 		"type": "default"
-		, "svrs": [{ "type": "gate", "id": 1, "sock_type": "tcp"
-		, "sock_addr": "0.0.0.0:9090", "stream": "default" }]
-
+		, "conn" : {
+			"svrs": [{ "type": "gate", "id": 1, "sock_type": "tcp"
+			, "sock_addr": "0.0.0.0:9090", "stream": "default" }]
+		}
 	}
 }
 `
-	j := sf_config.New_json_config()
+	j := config.NewJsonConfig()
 	j.Read([]byte(conf))
 	j, _ = j.Get("net")
+	j, _ = j.Get("conn")
 	fmt.Println(j)
 
-	n, e := sf_net.New_network(j)
-	if e != nil {
-		fmt.Println("err: ", e)
-		return
-	}
+	conns := net.NewConnMgr(j)
 
 	s := new(svr)
-	s.net = n
-	n.Register_callback(s)
-	n.Start()
+	s.mgr = conns
+	conns.Register(s)
+	conns.Start()
 
 	for {
 		time.Sleep(time.Second * 2)

@@ -38,7 +38,7 @@ func (c *json_Config) Type() (cvt Config_Value_Type, err error) {
 	return
 }
 
-func (c *json_Config) Arr_type() (cvt Config_Value_Type, err error) {
+func (c *json_Config) ArrType() (cvt Config_Value_Type, err error) {
 	if c == nil {
 		err = misc.ErrNilPointer
 		return
@@ -171,7 +171,7 @@ func (c *json_Config) Arr() (v []Config) {
 	return
 }
 
-func New_json_config() (c Config) {
+func NewJsonConfig() (c Config) {
 	j := new(json_Config)
 	j.is_read = false
 	j.content = nil

@@ -18,7 +18,7 @@ func GenUniConnId() ConnId {
 	var i uint32
 	for {
 		i = getNewId()
-		if CheckConnIdInvalid(ConnId(i)) {
+		if !CheckConnIdInvalid(ConnId(i)) {
 			break
 		}
 	}

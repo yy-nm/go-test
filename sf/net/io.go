@@ -8,7 +8,7 @@ import (
 type IOClt interface {
 	Connect() (err error)
 
-	GetNetAddr() (na *netAddr)
+	GetNetAddr() (na *NetAddr)
 
 	Send(p Packet) (err error)
 	Recv() (p Packet, err error)
@@ -27,7 +27,7 @@ type IOSvr interface {
 	StreamType() (st StreamType, err error)
 }
 
-type netAddr struct {
+type NetAddr struct {
 	t    string
 	addr string
 }
@@ -43,7 +43,7 @@ func (sc *svrClient) Connect() (err error) {
 	return
 }
 
-func (sc *svrClient) GetNetAddr() (na *netAddr) {
+func (sc *svrClient) GetNetAddr() (na *NetAddr) {
 	return
 }
 
@@ -90,7 +90,7 @@ func (sc *svrClient) GetId() ConnId {
 }
 
 type client struct {
-	netAddr
+	NetAddr
 	svrClient
 	st StreamType
 }
@@ -115,15 +115,15 @@ func (c *client) IsRecv() bool {
 	return false
 }
 
-func (c *client) GetNetAddr() (na *netAddr) {
+func (c *client) GetNetAddr() (na *NetAddr) {
 	if c == nil {
 		return nil
 	}
-	return &c.netAddr
+	return &c.NetAddr
 }
 
 type svr struct {
-	netAddr
+	NetAddr
 	l  net.Listener
 	st StreamType
 }
@@ -182,9 +182,9 @@ func newSvrClient(n net.Conn, st StreamType, id ConnId) IOClt {
 }
 
 func newClient(t, addr string, st StreamType, id ConnId) IOClt {
-	return &client{netAddr{t, addr}, svrClient{nil, id}, st}
+	return &client{NetAddr{t, addr}, svrClient{nil, id}, st}
 }
 
 func newSvr(t, addr string, st StreamType) IOSvr {
-	return &svr{netAddr{t, addr}, nil, st}
+	return &svr{NetAddr{t, addr}, nil, st}
 }
