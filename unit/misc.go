@@ -1,13 +1,17 @@
-package main
+package unit
 
 import (
 	"fmt"
 	"io"
 	"net"
-	"os"
 	"strconv"
 	"time"
 )
+
+type Statistics interface {
+	CollectSend(sendCount int)
+	CollectRecv(recvCount int)
+}
 
 type DeviceZero struct {
 	Count int
@@ -42,7 +46,7 @@ func (dn *DeviceNull) Close() error {
 	return nil
 }
 
-func parseData(args []string) (port int, ip, t string, tm int) {
+func ParseData(args []string) (port int, ip, t string, tm int) {
 	port = 9090
 	ip = "127.0.0.1"
 	t = "tcp"
@@ -65,7 +69,7 @@ func parseData(args []string) (port int, ip, t string, tm int) {
 	return
 }
 
-func unitTest(port int, ip, t string, tm int) {
+func UnitTest(port int, ip, t string, tm int, ss Statistics) {
 	s, err := net.Dial(t, fmt.Sprintf("%s:%d", ip, port))
 	if err != nil {
 		panic(err)
@@ -87,16 +91,9 @@ func unitTest(port int, ip, t string, tm int) {
 	fmt.Printf("send speed: %d\n", dz.Count/tm)
 	fmt.Printf("recv speed: %d\n", dn.Count/tm)
 
-	s.Close()
-}
-
-func main() {
-
-	if len(os.Args) < 2 {
-		fmt.Println("process need one param at least")
+	if ss != nil {
+		ss.CollectSend(dz.Count / tm)
+		ss.CollectRecv(dn.Count / tm)
 	}
-
-	port, ip, t, tm := parseData(os.Args[1:])
-
-	unitTest(port, ip, t, tm)
+	s.Close()
 }

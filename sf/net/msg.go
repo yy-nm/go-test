@@ -61,12 +61,10 @@ func NewMsg(t MsgType, body []byte, tail []byte, id ConnId) Msg {
 	m := new(msg)
 	m.t = t
 	if body != nil {
-		m.body = make([]byte, len(body))
-		copy(m.body, body)
+		m.body = body
 	}
 	if tail != nil {
-		m.tail = make([]byte, len(tail))
-		copy(m.tail, tail)
+		m.tail = tail
 	}
 	m.id = id
 	return m

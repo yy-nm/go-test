@@ -32,7 +32,7 @@ func main() {
 		"type": "default"
 		, "conn" : {
 			"svrs": [{ "type": "gate", "id": 1, "sock_type": "tcp"
-			, "sock_addr": "0.0.0.0:9090", "stream": "default" }]
+			, "sock_addr": "0.0.0.0:9091", "stream": "default" }]
 		}
 	}
 }
