@@ -28,8 +28,8 @@ type IOSvr interface {
 }
 
 type NetAddr struct {
-	t    string
-	addr string
+	Type string
+	Addr string
 }
 
 // recv from IO_svr
@@ -102,7 +102,7 @@ func (c *client) Connect() (err error) {
 	}
 
 	var n net.Conn
-	n, err = net.Dial(c.t, c.addr)
+	n, err = net.Dial(c.Type, c.Addr)
 	if err != nil {
 		return
 	}
@@ -138,7 +138,7 @@ func (s *svr) Connect() (err error) {
 		s.l = nil
 	}
 
-	s.l, err = net.Listen(s.t, s.addr)
+	s.l, err = net.Listen(s.Type, s.Addr)
 	return
 }
 

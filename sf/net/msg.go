@@ -26,60 +26,61 @@ const (
 	MSG_FLAG_OPT MsgType = 0x0ff00000
 
 	MSG_FLAG_TYPE     MsgType = 0x000f0000
-	MSG_FLAG_TYPE_NOR MsgType = 0x00000000
-	MSG_FLAG_TYPE_SYS MsgType = 0x00010000
-	MSG_FLAG_TYPE_INT MsgType = 0x00020000
+	MSG_FLAG_TYPE_NOR MsgType = 0x00010000
+	MSG_FLAG_TYPE_SYS MsgType = 0x00020000
+	MSG_FLAG_TYPE_TFM MsgType = 0x00030000
 
 	MSG_FLAG_PROTO MsgType = 0x0000ffff
 
-	MSG_SHIFT_OPT uint = 5
+	MSG_SHIFT_OPT  uint = 20
+	MSG_SHIFT_TYPE uint = 16
 )
 
-type Packet interface {
-	GetType() MsgType
-	GetBody() []byte
-	GetTail() []byte
+//type Packet interface {
+//	GetType() MsgType
+//	GetBody() []byte
+//	GetTail() []byte
+//}
+//
+//type Msg interface {
+//	Packet
+//	GetId() ConnId
+//}
+
+type Packet struct {
+	Type MsgType
+	Body []byte
+	Tail []byte
 }
 
-type Msg interface {
+type Msg struct {
 	Packet
-	GetId() ConnId
-}
-
-type packet struct {
-	t    MsgType
-	body []byte
-	tail []byte
-}
-
-type msg struct {
-	packet
-	id ConnId
+	Id ConnId
 }
 
 func NewMsg(t MsgType, body []byte, tail []byte, id ConnId) Msg {
-	m := new(msg)
-	m.t = t
+	m := new(Msg)
+	m.Type = t
 	if body != nil {
-		m.body = body
+		m.Body = body
 	}
 	if tail != nil {
-		m.tail = tail
+		m.Tail = tail
 	}
-	m.id = id
+	m.Id = id
 	return m
 }
 
 func NewPacket(t MsgType, body []byte, tail []byte) Packet {
-	p := new(packet)
-	p.t = t
+	p := new(Packet)
+	p.Type = t
 	if body != nil {
-		p.body = make([]byte, len(body))
-		copy(p.body, body)
+		p.Body = make([]byte, len(body))
+		copy(p.Body, body)
 	}
 	if tail != nil {
-		p.tail = make([]byte, len(tail))
-		copy(p.tail, tail)
+		p.Tail = make([]byte, len(tail))
+		copy(p.Tail, tail)
 	}
 
 	return p
@@ -99,13 +100,15 @@ func (mt MsgType) IsCluster() bool {
 
 func (mt MsgType) GetOpt() int {
 	opt := mt & MSG_FLAG_OPT
+	opt >>= MSG_SHIFT_OPT
 	o := int(opt)
-	o >>= MSG_SHIFT_OPT
 	return o
 }
 
-func (mt MsgType) GetType() MsgType {
-	return mt & MSG_FLAG_TYPE
+func (mt MsgType) GetType() int {
+	t := mt & MSG_FLAG_TYPE
+	t >>= MSG_SHIFT_TYPE
+	return int(t)
 }
 
 func (mt MsgType) GetProto() int {
@@ -182,18 +185,18 @@ func (mt MsgType) Convert2Bytes(bo binary.ByteOrder) (buf []byte) {
 	return
 }
 
-func (p *packet) GetType() MsgType {
-	return p.t
+func (p *Packet) GetType() MsgType {
+	return p.Type
 }
 
-func (p *packet) GetBody() []byte {
-	return p.body
+func (p *Packet) GetBody() []byte {
+	return p.Body
 }
 
-func (p *packet) GetTail() []byte {
-	return p.tail
+func (p *Packet) GetTail() []byte {
+	return p.Tail
 }
 
-func (m *msg) GetId() ConnId {
-	return m.id
+func (m *Msg) GetId() ConnId {
+	return m.Id
 }

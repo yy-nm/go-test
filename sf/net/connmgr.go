@@ -43,7 +43,8 @@ const (
 )
 
 type conn struct {
-	clt   IOClt
+	//clt   IOClt
+	IOClt
 	state connState
 }
 
@@ -70,7 +71,7 @@ func (cm *connManager) CloseConn(id ConnId) {
 	}
 	delete(cm.conns, id)
 	c.state = CONN_STATE_BROKEN
-	c.clt.Close()
+	c.Close()
 	if cm.callback != nil {
 		go cm.callback.ConnBroken(id)
 	}
@@ -151,7 +152,7 @@ func (cm *connManager) Stop() (err error) {
 			panic("connManager clts contains non-conn elements")
 		}
 		client.state = CONN_STATE_BROKEN
-		client.clt.Close()
+		client.Close()
 	}
 
 	for k, _ := range cm.conns {
@@ -218,7 +219,7 @@ func (cm *connManager) buildNewClients(n net.Conn, s IOSvr) {
 	}
 
 	client := newSvrClient(n, st, GenUniConnId())
-	c := &conn{clt: client, state: CONN_STATE_CONNECTED}
+	c := &conn{IOClt: client, state: CONN_STATE_CONNECTED}
 	cm.addNewClients(c)
 }
 
@@ -228,13 +229,13 @@ func (cm *connManager) addNewClients(c *conn) {
 	}
 
 	cm.conn_lock.Lock()
-	cm.conns[c.clt.GetId()] = c
+	cm.conns[c.GetId()] = c
 	cm.conn_lock.Unlock()
 
 	go cm.recvMsg(c)
 
 	if cm.callback != nil {
-		cm.callback.ConnBuild(c.clt.GetId(), nil)
+		cm.callback.ConnBuild(c.GetId(), nil)
 	}
 }
 
@@ -243,7 +244,7 @@ func (cm *connManager) clientConn(c *conn) {
 		return
 	}
 
-	c.clt.Close()
+	c.Close()
 	c.state = CONN_STATE_INIT
 	for {
 		err := cm.clientReConn(c)
@@ -267,7 +268,7 @@ func (cm *connManager) clientReConn(c *conn) (err error) {
 	}
 
 	c.state = CONN_STATE_CONNECTING
-	err = c.clt.Connect()
+	err = c.Connect()
 	if err != nil {
 		if c.state == CONN_STATE_CONNECTING {
 			c.state = CONN_STATE_BROKEN
@@ -289,7 +290,7 @@ func (cm *connManager) recvMsg(c *conn) {
 		if c.state != CONN_STATE_CONNECTED {
 			break
 		}
-		p, e := c.clt.Recv()
+		p, e := c.Recv()
 		if e != nil {
 			c.state = CONN_STATE_BROKEN
 			break
@@ -297,12 +298,12 @@ func (cm *connManager) recvMsg(c *conn) {
 
 		//misc.Log("read from client: ", string(p.GetBody()), ", id: ", c.clt.GetId())
 		if p != nil && cm.callback != nil {
-			go cm.callback.ConnRecv(c.clt.GetId(), NewMsg(p.GetType(), p.GetBody(), p.GetTail(), c.clt.GetId()))
+			go cm.callback.ConnRecv(c.GetId(), NewMsg(p.GetType(), p.GetBody(), p.GetTail(), c.GetId()))
 		}
 	}
 
-	if c.state == CONN_STATE_BROKEN && c.clt.IsRecv() {
-		cm.CloseConn(c.clt.GetId())
+	if c.state == CONN_STATE_BROKEN && c.IsRecv() {
+		cm.CloseConn(c.GetId())
 	}
 }
 
@@ -311,14 +312,14 @@ func (cm *connManager) clientSendMsg(c *conn, m Msg) {
 		return
 	}
 
-	if c.state == CONN_STATE_BROKEN && !c.clt.IsRecv() {
+	if c.state == CONN_STATE_BROKEN && !c.IsRecv() {
 		cm.clientReConn(c)
 	} else if c.state == CONN_STATE_BROKEN {
 		return
 	}
 
 	if c.state == CONN_STATE_CONNECTED {
-		c.clt.Send(m)
+		c.Send(m)
 	}
 }
 
@@ -385,9 +386,9 @@ func newDefaultConnMgr(conf config.Config) ConnMgr {
 
 func readSvr(conf config.Config) IOSvr {
 	c, _ := conf.Get(CONF_NETWORK_KEY_SOCK_TYPE)
-	nt := Config_get_string(c)
+	nt := ConfigGetString(c)
 	c, _ = conf.Get(CONF_NETWORK_KEY_SOCK_ADDR)
-	na := Config_get_string(c)
+	na := ConfigGetString(c)
 	c, _ = conf.Get(CONF_NETWORK_KEY_STREAM)
 	st := getStreamType(c)
 
@@ -400,14 +401,14 @@ func readClient(conf config.Config) *conn {
 		return nil
 	}
 
-	return &conn{clt: c, state: CONN_STATE_INIT}
+	return &conn{IOClt: c, state: CONN_STATE_INIT}
 }
 
 func readClt(conf config.Config) IOClt {
 	c, _ := conf.Get(CONF_NETWORK_KEY_SOCK_TYPE)
-	nt := Config_get_string(c)
+	nt := ConfigGetString(c)
 	c, _ = conf.Get(CONF_NETWORK_KEY_SOCK_ADDR)
-	na := Config_get_string(c)
+	na := ConfigGetString(c)
 	c, _ = conf.Get(CONF_NETWORK_KEY_STREAM)
 	st := getStreamType(c)
 

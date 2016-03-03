@@ -5,19 +5,45 @@ import (
 	"test/sf/config"
 )
 
-type ServiceType string
+type Service struct {
+	Stype ServiceType
+	Sid   ServiceId
+}
+type ServiceType int
 type ServiceId int
 
-func Get_service_type(conf config.Config) ServiceType {
+const (
+	_ ServiceType = iota
+	SERVICE_LOGIN
+	SERVICE_ACCOUNT
+	SERVICE_DATACENTER
+	SERVICE_GATE
+	SERVICE_U_WATCHER
+)
+
+const Services map[string]ServiceType = map[string]ServiceType{
+	"login":      SERVICE_LOGIN,
+	"account":    SERVICE_ACCOUNT,
+	"datacenter": SERVICE_DATACENTER,
+	"gate":       SERVICE_GATE,
+	"u_watcher":  SERVICE_U_WATCHER,
+}
+
+func GetServiceType(conf config.Config) ServiceType {
 	t, e := conf.String()
 	if e != nil {
 		fmt.Println(conf.Type())
 		panic("service type must be string")
 	}
-	return ServiceType(t)
+	st, ok := Services[t]
+	if !ok {
+		panic("service type not find in Services")
+	}
+
+	return st
 }
 
-func Get_service_id(conf config.Config) ServiceId {
+func GetServiceId(conf config.Config) ServiceId {
 	i, e := conf.Float()
 	if e != nil {
 		panic("service id must be number")
@@ -26,7 +52,7 @@ func Get_service_id(conf config.Config) ServiceId {
 	return ServiceId(i)
 }
 
-func Config_get_string(conf config.Config) string {
+func ConfigGetString(conf config.Config) string {
 	s, e := conf.String()
 	if e != nil {
 		panic("Config_get_string func must get string")
